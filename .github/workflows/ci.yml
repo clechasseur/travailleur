@@ -83,7 +83,7 @@ jobs:
           key: all-features-${{ matrix.all-features }}-msrv-pins-files-${{ hashFiles('**/msrv-pins.toml') }}
 
       - name: Install required tools
-        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
+        uses: taiki-e/install-action@d9dbaa35c1268d171952e74d148ee79629a77c35
         with:
           tool: just,cargo-hack,cargo-minimal-versions,cargo-msrv-prep
 
@@ -129,7 +129,7 @@ jobs:
           key: ignore-lock-${{ matrix.ignore-lock }}-all-features-${{ matrix.all-features }}
 
       - name: Install just
-        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
+        uses: taiki-e/install-action@d9dbaa35c1268d171952e74d148ee79629a77c35
         with:
           tool: just
 
@@ -161,7 +161,7 @@ jobs:
           cache-targets: false
 
       - name: Install cargo-tarpaulin
-        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
+        uses: taiki-e/install-action@d9dbaa35c1268d171952e74d148ee79629a77c35
         with:
           tool: cargo-tarpaulin
 
@@ -213,7 +213,7 @@ jobs:
           cache-targets: false
 
       - name: Install just
-        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
+        uses: taiki-e/install-action@d9dbaa35c1268d171952e74d148ee79629a77c35
         with:
           tool: just
 
