@@ -3,4 +3,17 @@ name = "travailleur"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["validate"]
+validate = ["dep:garde", "dep:itertools", "garde/derive", "garde/url"]
+
 [dependencies]
+garde = { version = "0.18.0", optional = true }
+itertools = { version = "0.12.1", optional = true }
+num = "0.4.1"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
+thiserror = "1.0.58"
+
+[build-dependencies]
+rustc_version = "0.4.0"

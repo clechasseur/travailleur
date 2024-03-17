@@ -1,14 +1,20 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+//! A Rust library implementing the [Serverless workflow] specification. In progress.
+//!
+//! Implements [v0.8] of the specification.
+//!
+//! [Serverless workflow]: https://serverlessworkflow.io/
+//! [v0.8]: https://github.com/serverlessworkflow/specification/blob/v0.8/specification.md
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// TODO re-enable once we're ready to document
+// #![deny(missing_docs)]
+// #![deny(rustdoc::missing_crate_level_docs)]
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(rustdoc::private_intra_doc_links)]
+#![cfg_attr(any(nightly_rustc, docsrs), feature(doc_cfg))]
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub(crate) mod detail;
+pub mod error;
+pub mod workflow;
+
+pub use error::Error;
+pub use error::Result;
