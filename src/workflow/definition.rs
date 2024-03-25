@@ -13,6 +13,9 @@ pub mod secrets;
 pub mod timeouts;
 
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufReader, Read};
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -141,6 +144,73 @@ pub struct WorkflowDefinition {
     pub states: Vec<State>,
 }
 
+impl WorkflowDefinition {
+    /// Loads a workflow definition from a local file.
+    ///
+    /// The definition needs to be in either JSON or YAML[^1] format.
+    ///
+    /// # Errors
+    ///
+    /// All errors returned are variants of [`Error`](crate::Error).
+    ///
+    /// * `Io`: I/O error while reading data from file
+    /// * `Json`: Error parsing definition JSON
+    /// * `Yaml`: Error parsing definition YAML
+    /// * `Validation`: Workflow definition is invalid[^2]
+    /// * `UnsupportedOperation`: YAML file passed but `yaml` feature is disabled
+    /// * `UnsupportedFileFormat`: Not a JSON or YAML file
+    ///
+    /// [^1]: requires the `yaml` feature (enabled by default).
+    ///
+    /// [^2]: requires the `validate` feature (enabled by default).
+    pub fn load_from_file<P>(path: P) -> crate::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref();
+
+        let file = BufReader::new(File::open(path)?);
+        let extension = path.extension().map(|ext| ext.to_ascii_lowercase());
+        let extension = extension.as_ref().and_then(|ext| ext.to_str()).unwrap_or("");
+
+        let result = match extension {
+            "json" => Self::load_from_json(file),
+            "yaml" | "yml" => Self::load_from_yaml(file),
+            extension => Err(crate::Error::UnsupportedFileFormat(extension.into())),
+        };
+
+        #[cfg(feature = "validate")]
+        if let Ok(definition) = result.as_ref() {
+            use garde::Validate;
+            definition.validate(&())?;
+        }
+
+        result
+    }
+
+    fn load_from_json<R>(reader: R) -> crate::Result<Self>
+    where
+        R: Read,
+    {
+        Ok(serde_json::from_reader(reader)?)
+    }
+
+    fn load_from_yaml<R>(reader: R) -> crate::Result<Self>
+    where
+        R: Read,
+    {
+        #[cfg(feature = "yaml")]
+        {
+            Ok(serde_yaml::from_reader(reader)?)
+        }
+
+        #[cfg(not(feature = "yaml"))]
+        {
+            Err(crate::Error::UnsupportedOperation("yaml"))
+        }
+    }
+}
+
 /// Workflow identifier
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "validate", derive(garde::Validate))]
@@ -154,6 +224,25 @@ pub struct Identifier {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "validate", garde(length(min = 1)))]
     pub key: Option<String>,
+}
+
+impl Identifier {
+    /// Returns the unique, domain-specific workflow identifier.
+    ///
+    /// # Return value
+    ///
+    /// | Value of [`id`] | Value of [`key`] | Return value             |
+    /// |-----------------|------------------|--------------------------|
+    /// | Some(id)        | _                | Ok(id)                   |
+    /// | None            | Some(key)        | Ok(key)                  |
+    /// | None            | None             | Err([MissingIdentifier]) |
+    ///
+    /// [`id`]: Self::id
+    /// [`key`]: Self::key
+    /// [MissingIdentifier]: crate::Error::MissingIdentifier
+    pub fn id(&self) -> crate::Result<&str> {
+        self.id.as_ref().or(self.key.as_ref()).map(|id| id.as_str()).ok_or(crate::Error::MissingIdentifier)
+    }
 }
 
 /// JSON Schema used to validate the workflow data input

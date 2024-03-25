@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["validate"]
+default = ["validate", "yaml"]
 validate = ["dep:garde", "dep:itertools", "garde/derive", "garde/url"]
+yaml = ["dep:serde_yaml"]
 
 [dependencies]
 garde = { version = "0.18.0", optional = true }
@@ -13,7 +14,13 @@ itertools = { version = "0.12.1", optional = true }
 num = "0.4.1"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
+# Note: serde_yaml has been deprecated as of 24-03-2024, but it seems fine to still
+# use it for now until a suitable replacement has emerged.
+serde_yaml = { version = "0.9.34", optional = true }
 thiserror = "1.0.58"
+
+[dev-dependencies]
+paste = "1.0.14"
 
 [build-dependencies]
 rustc_version = "0.4.0"
