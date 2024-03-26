@@ -1,7 +1,24 @@
 [package]
 name = "travailleur"
 version = "0.0.1"
+authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
 edition = "2021"
+
+readme = "README.md"
+license = "MIT"
+
+homepage = "https://github.com/clechasseur/travailleur#readme"
+repository = "https://github.com/clechasseur/travailleur"
+documentation = "https://docs.rs/cargo-travailleur"
+
+description = "A Rust implementation of the Serverless Workflow specification ☁️"
+
+include = [ "src/**/*", "tests/**/*", "build.rs", "LICENSE", "README.md" ]
+
+[package.metadata.docs.rs]
+all-features = true
+targets = [ "x86_64-unknown-linux-gnu" ]
+rustc-args = [ "--cfg", "docsrs" ]
 
 [features]
 default = ["validate", "yaml"]
