@@ -8,6 +8,23 @@ use crate::workflow::definition::events::EventKind;
 use crate::workflow::definition::functions::FunctionType;
 use crate::workflow::definition::{CompletionType, OnComplete};
 
+pub trait OptFrom<T>: Sized {
+    fn opt_from(value: T) -> Option<Self>;
+}
+
+pub trait IntoOpt<U>: Sized {
+    fn into_opt(self) -> Option<U>;
+}
+
+impl<T, U> IntoOpt<U> for T
+where
+    U: OptFrom<T>,
+{
+    fn into_opt(self) -> Option<U> {
+        U::opt_from(self)
+    }
+}
+
 pub fn true_value() -> bool {
     true
 }
@@ -51,3 +68,15 @@ pub fn consumed() -> EventKind {
 pub fn rest() -> FunctionType {
     FunctionType::Rest
 }
+
+#[cfg(feature = "validate")]
+pub trait GardeValidate: ::garde::Validate<Context = ()> {}
+
+#[cfg(feature = "validate")]
+impl<T> GardeValidate for T where T: ::garde::Validate<Context = ()> {}
+
+#[cfg(not(feature = "validate"))]
+pub trait GardeValidate {}
+
+#[cfg(not(feature = "validate"))]
+impl<T> GardeValidate for T {}

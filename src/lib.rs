@@ -12,8 +12,11 @@
 #![deny(rustdoc::private_intra_doc_links)]
 #![cfg_attr(any(nightly_rustc, docsrs), feature(doc_cfg))]
 
+pub mod cache;
 pub(crate) mod detail;
 pub mod error;
+pub mod loader;
+pub mod validation;
 pub mod workflow;
 
 pub use error::Error;

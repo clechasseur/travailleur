@@ -3,6 +3,7 @@
 //! Corresponding JSON schema: [errors.json](https://github.com/serverlessworkflow/specification/blob/v0.8/schema/errors.json).
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 /// Workflow Error definitions
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[serde(untagged)]
 pub enum Errors {
     /// URI to a resource containing error definitions (json or yaml)
-    Uri(#[cfg_attr(feature = "validate", garde(url))] String),
+    Uri(#[cfg_attr(feature = "validate", garde(skip))] Url),
 
     /// Workflow Error definitions.
     ///

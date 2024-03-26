@@ -3,6 +3,7 @@
 //! Corresponding JSON schema: [retries.json](https://github.com/serverlessworkflow/specification/blob/v0.8/schema/retries.json).
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[cfg(feature = "validate")]
 use crate::detail::garde::must_be_optional_multiple_of;
@@ -16,7 +17,7 @@ use crate::workflow::definition::common::NonNegativeNumber;
 #[serde(untagged)]
 pub enum Retries {
     /// URI to a resource containing retry definitions (json or yaml)
-    Uri(#[cfg_attr(feature = "validate", garde(url))] String),
+    Uri(#[cfg_attr(feature = "validate", garde(skip))] Url),
 
     /// Inline retry definitions
     Inline(#[cfg_attr(feature = "validate", garde(dive, length(min = 1)))] Vec<RetryDef>),

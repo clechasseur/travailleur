@@ -3,6 +3,7 @@
 //! Corresponding JSON schema: [timeouts.json](https://github.com/serverlessworkflow/specification/blob/v0.8/schema/timeouts.json).
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::detail::true_value;
 
@@ -12,7 +13,7 @@ use crate::detail::true_value;
 #[serde(untagged, deny_unknown_fields)]
 pub enum Timeouts {
     /// URI to a resource containing timeouts definitions (json or yaml)
-    Uri(#[cfg_attr(feature = "validate", garde(url))] String),
+    Uri(#[cfg_attr(feature = "validate", garde(skip))] Url),
 
     /// Workflow default timeouts
     #[serde(rename_all = "camelCase")]

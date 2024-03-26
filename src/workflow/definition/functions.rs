@@ -3,6 +3,7 @@
 //! Corresponding JSON schema: [functions.json](https://github.com/serverlessworkflow/specification/blob/v0.8/schema/functions.json).
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::detail::rest;
 use crate::workflow::definition::common::Metadata;
@@ -13,7 +14,7 @@ use crate::workflow::definition::common::Metadata;
 #[serde(untagged)]
 pub enum Functions {
     /// URI to a resource containing function definitions (json or yaml)
-    Uri(#[cfg_attr(feature = "validate", garde(url))] String),
+    Uri(#[cfg_attr(feature = "validate", garde(skip))] Url),
 
     /// Inline function definitions
     Inline(#[cfg_attr(feature = "validate", garde(length(min = 1)))] Vec<Function>),

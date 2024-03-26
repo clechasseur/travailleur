@@ -3,6 +3,7 @@
 //! Corresponding JSON schema: [auth.json](https://github.com/serverlessworkflow/specification/blob/v0.8/schema/auth.json).
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::detail::basic;
 use crate::workflow::definition::common::Metadata;
@@ -13,7 +14,7 @@ use crate::workflow::definition::common::Metadata;
 #[serde(untagged)]
 pub enum Auth {
     /// URI to a resource containing auth definitions (json or yaml)
-    Uri(#[cfg_attr(feature = "validate", garde(url))] String),
+    Uri(#[cfg_attr(feature = "validate", garde(skip))] Url),
 
     /// Workflow auth definitions
     Definitions(#[cfg_attr(feature = "validate", garde(dive, length(min = 1)))] Vec<AuthDef>),

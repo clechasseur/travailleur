@@ -3,6 +3,7 @@
 //! Corresponding JSON schema: [events.json](https://github.com/serverlessworkflow/specification/blob/v0.8/schema/events.json).
 
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::detail::{consumed, true_value};
 use crate::workflow::definition::common::Metadata;
@@ -15,7 +16,7 @@ use crate::workflow::definition::detail::garde::mandatory_for_consumed_events;
 #[serde(untagged)]
 pub enum Events {
     /// URI to a resource containing event definitions (json or yaml)
-    Uri(#[cfg_attr(feature = "validate", garde(url))] String),
+    Uri(#[cfg_attr(feature = "validate", garde(skip))] Url),
 
     /// Inline event definitions
     Inline(#[cfg_attr(feature = "validate", garde(length(min = 1)))] Vec<EventDef>),

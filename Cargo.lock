@@ -66,7 +66,6 @@ dependencies = [
  "compact_str",
  "garde_derive",
  "smallvec",
- "url",
 ]
 
 [[package]]
@@ -368,6 +367,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "thiserror",
+ "url",
 ]
 
 [[package]]
@@ -406,4 +406,5 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]

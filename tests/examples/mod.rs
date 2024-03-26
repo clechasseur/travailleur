@@ -1,6 +1,8 @@
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use paste::paste;
+use travailleur::cache::DefCache;
 use travailleur::workflow::definition::WorkflowDefinition;
 
 fn examples_path() -> PathBuf {
@@ -14,8 +16,9 @@ macro_rules! test_files {
         paste! {
             #[test]
             fn [<test_ $id:lower _ $format>]() {
-                let definition = WorkflowDefinition::load_from_file(
-                    examples_path().join(&format!("{}.{}", stringify!($id), stringify!($format)))
+                let mut cache = DefCache::new();
+                let definition: Rc<WorkflowDefinition> = cache.get_or_insert(
+                    format!("file://{}", examples_path().join(&format!("{}.{}", stringify!($id), stringify!($format))).to_string_lossy()).as_str()
                 )
                 .expect(&format!(
                     "error loading workflow definition '{}' from {} file",
