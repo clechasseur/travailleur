@@ -142,6 +142,22 @@ pub struct WorkflowDefinition {
     pub states: Vec<State>,
 }
 
+impl WorkflowDefinition {
+    /// Returns the name of the starting workflow [`State`].
+    ///
+    /// If `None` is returned, the workflow has no state and thus would complete as
+    /// soon as it is started[^1].
+    ///
+    /// [^1]: this is impossible if the workflow has been validated, because the workflow
+    ///       would then be guaranteed to have at least one [`State`].
+    pub fn start_state_name(&self) -> Option<&str> {
+        self.start
+            .as_ref()
+            .map(StartDef::state_name)
+            .or_else(|| self.states.first().map(State::name))
+    }
+}
+
 /// Workflow identifier
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "validate", derive(garde::Validate))]
@@ -665,6 +681,25 @@ pub enum State {
 
     /// Callback state
     Callback(#[cfg_attr(feature = "validate", garde(dive))] CallbackState),
+}
+
+impl State {
+    /// Returns the state name.
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Sleep(state) => state.name.as_str(),
+            Self::Event(state) => state.name.as_str(),
+            Self::Operation(state) => state.name.as_str(),
+            Self::Parallel(state) => state.name.as_str(),
+            Self::Switch(state) => match state {
+                SwitchState::DataBased(state) => state.name.as_str(),
+                SwitchState::EventBased(state) => state.name.as_str(),
+            },
+            Self::Inject(state) => state.name.as_str(),
+            Self::ForEach(state) => state.name.as_str(),
+            Self::Callback(state) => state.name.as_str(),
+        }
+    }
 }
 
 /// Causes the workflow execution to sleep for a specified duration
@@ -1606,6 +1641,26 @@ pub enum StartDef {
         #[cfg_attr(feature = "validate", garde(dive))]
         schedule: Schedule,
     },
+}
+
+impl StartDef {
+    /// Returns the start state's name.
+    pub fn state_name(&self) -> &str {
+        match self {
+            Self::ByName(state_name) => state_name.as_str(),
+            Self::Complex { state_name, .. } => state_name.as_ref(),
+        }
+    }
+
+    /// Returns the [`Schedule`] to use to start the workflow.
+    ///
+    /// Will return `None` if the workflow does not have a start schedule.
+    pub fn schedule(&self) -> Option<&Schedule> {
+        match self {
+            Self::ByName(_) => None,
+            Self::Complex { schedule, .. } => Some(schedule),
+        }
+    }
 }
 
 /// Schedule definition
