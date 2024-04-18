@@ -50,7 +50,7 @@ use crate::workflow::definition::common::ValidatedNonNegativeNumber;
 //
 // pub(crate) use {garde_append, garde_check_one_is_set, garde_check_option_not_empty, garde_optional_dive};
 
-pub fn one_must_be_set<'f2, T, U, C>(
+pub fn one_of_two_must_be_set<'f2, T, U, C>(
     field_name_one: &'static str,
     field_name_two: &'static str,
     field_two: Option<&'f2 U>,
@@ -116,11 +116,6 @@ where
     C: ?Sized,
 {
     let value = value.as_ref();
-
-    // An empty string is interpreted as 0, so is considered valid.
-    if value.is_empty() {
-        return Ok(());
-    }
 
     value
         .parse::<T>()

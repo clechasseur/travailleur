@@ -7,7 +7,7 @@ use std::rc::Rc;
 use serde::de::DeserializeOwned;
 use url::Url;
 
-use crate::validation::ValidateDef;
+use crate::validation::ValidateDefinition;
 
 /// Loader used through this crate to load workflow definition resources.
 ///
@@ -16,10 +16,10 @@ use crate::validation::ValidateDef;
 ///
 /// [^1]: requires the `yaml` feature (enabled by default).
 #[derive(Debug, Default)]
-pub struct DefLoader {}
+pub struct DefinitionLoader {}
 
-impl DefLoader {
-    /// Creates a new default `DefLoader`.
+impl DefinitionLoader {
+    /// Creates a new default loader.
     pub fn new() -> Self {
         Self::default()
     }
@@ -32,12 +32,12 @@ impl DefLoader {
     ///
     /// * [`UnsupportedUriScheme`]: `uri`'s scheme is not supported[^1]
     /// * [`UnsupportedFileFormat`]: `uri`'s file extension is not supported[^2]
-    /// * [`UnsupportedOperation`]: operation cannot be performed because of a missing feature
-    /// * [`InvalidFileUri`]: `uri` is a `file://` URI but its format is invalid
-    /// * [`Io`]: I/O error while loading file content
-    /// * [`Json`]: error while deserializing JSON data
-    /// * `Yaml`: error while deserializing YAML data[^3]
-    /// * `Validation`: definition successfully loaded but determined to be invalid[^4]
+    /// * [`FeatureDisabled`]: operation cannot be performed because a disabled feature
+    /// * [`InvalidFileUri`]: `uri` is a `file://` URI but the URI format is invalid
+    /// * [`FileIo`]: I/O error while loading file content
+    /// * [`JsonConversionFailed`]: error while deserializing JSON data
+    /// * [`YamlConversionFailed`]: error while deserializing YAML data[^3]
+    /// * [`ValidationFailed`]: definition successfully loaded but determined to be invalid[^4]
     ///
     /// [^1]: currently, only `file://` or `http(s)://` URIs are supported.
     ///
@@ -50,13 +50,15 @@ impl DefLoader {
     ///
     /// [`UnsupportedUriScheme`]: crate::Error::UnsupportedUriScheme
     /// [`UnsupportedFileFormat`]: crate::Error::UnsupportedFileFormat
-    /// [`UnsupportedOperation`]: crate::Error::UnsupportedOperation
-    /// [`InvalidFileUri`]: crate::Error::InvalidFileUri
-    /// [`Io`]: crate::Error::Io
-    /// [`Json`]: crate::Error::Json
+    /// [`FeatureDisabled`]: crate::Error::FeatureDisabled
+    /// [`InvalidFileUri`]: crate::Error::InvalidPathInFileUri
+    /// [`FileIo`]: crate::Error::FileIo
+    /// [`JsonConversionFailed`]: crate::Error::JsonConversionFailed
+    /// [`YamlConversionFailed`]: crate::Error::YamlConversionFailed
+    /// [`ValidationFailed`]: crate::Error::ValidationFailed
     pub fn load<T>(&self, uri: &Url) -> crate::Result<Rc<T>>
     where
-        T: ValidateDef + DeserializeOwned,
+        T: ValidateDefinition + DeserializeOwned,
     {
         let bytes = match uri.scheme() {
             "file" => self.load_from_file(uri),
@@ -81,7 +83,7 @@ impl DefLoader {
 
         #[cfg(feature = "validate")]
         {
-            def.validate_def()?;
+            def.validate_definition()?;
         }
 
         Ok(def)
@@ -90,7 +92,7 @@ impl DefLoader {
     fn load_from_file(&self, uri: &Url) -> crate::Result<Vec<u8>> {
         let path = uri
             .to_file_path()
-            .map_err(|_| crate::Error::InvalidFileUri(uri.as_str().into()))?;
+            .map_err(|_| crate::Error::InvalidPathInFileUri { file_uri: uri.clone() })?;
 
         Ok(fs::read(path)?)
     }
@@ -117,7 +119,7 @@ impl DefLoader {
 
         #[cfg(not(feature = "yaml"))]
         {
-            Err(crate::Error::UnsupportedOperation { required_feature: "yaml" })
+            Err(crate::Error::FeatureDisabled { required_feature: "yaml" })
         }
     }
 }

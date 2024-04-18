@@ -4,6 +4,8 @@ use std::convert::Infallible;
 use std::io;
 use std::num::{ParseFloatError, ParseIntError};
 
+use url::Url;
+
 use crate::detail::OptFrom;
 
 /// Result type used in this crate. Uses the crate's [`Error`] type.
@@ -13,48 +15,42 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {
-    /// A string was supposed to contain a number but there was a parsing error.
+    // --- Errors related to workflow definitions ---
+    /// Workflow identifier was requested but was not found in workflow definition.
+    #[error("workflow identifier not specified")]
+    MissingIdentifier,
+
+    /// A string was supposed to contain an integer number but there was a parsing error.
     #[error("invalid number: {}", .0)]
-    InvalidNumber(#[from] ParseIntError),
+    InvalidInt(#[from] ParseIntError),
 
     /// A string was supposed to contain a floating-point number but there was a parsing error.
     #[error("invalid floating-point number: {}", .0)]
     InvalidFloat(#[from] ParseFloatError),
 
-    /// An I/O error occurred.
-    #[error("I/O error: {}", .0)]
-    Io(#[from] io::Error),
-
-    /// A JSON-related error occurred.
-    #[error("JSON error: {}", .0)]
-    Json(#[from] serde_json::Error),
-
-    /// A YAML-related error occurred.
-    #[cfg(feature = "yaml")]
-    #[error("YAML error: {}", .0)]
-    Yaml(#[from] serde_yaml::Error),
-
-    /// Error while parsing a URL/URI.
-    #[error("URL parsing error: {}", .0)]
-    Url(#[from] url::ParseError),
-
     /// One or more validation errors occurred.
-    #[cfg(feature = "validate")]
-    #[error("Validation error(s): {}", .0)]
-    Validation(#[from] garde::Report),
+    ///
+    /// ### Note
+    ///
+    /// This variant can only occur if the `validate` feature is enabled.
+    #[error("validation error(s): {}", .0)]
+    ValidationFailed(
+        #[cfg(feature = "validate")]
+        #[from]
+        garde::Report,
+        #[cfg(not(feature = "yaml"))] crate::impossible::Impossible,
+    ),
 
-    /// Operation is unsupported because a feature is disabled.
-    #[error("unsupported operation, requires feature '{}'", .required_feature)]
-    UnsupportedOperation {
-        /// Feature required for the operation to be supported.
-        required_feature: &'static str,
-    },
+    // --- Errors related to loading/saving workflow definitions ---
+    /// Error while parsing a URL/URI.
+    #[error("invalid URL: {}", .0)]
+    InvalidUrl(#[from] url::ParseError),
 
-    /// File format is unsupported.
-    #[error("unsupported file format: .{}", .file_ext)]
-    UnsupportedFileFormat {
-        /// Extension of file that is unsupported.
-        file_ext: String,
+    /// A `file://` URI could not be turned into a [`Path`](std::path::Path).
+    #[error("file:// URI '{}' contains invalid path", .file_uri)]
+    InvalidPathInFileUri {
+        /// The invalid `file://` URI.
+        file_uri: Url,
     },
 
     /// URI scheme is unsupported.
@@ -64,22 +60,51 @@ pub enum Error {
         scheme: String,
     },
 
-    /// A `file://` URI could not be turned into a [`Path`](std::path::Path).
-    #[error("invalid file:// URI: {}", .0)]
-    InvalidFileUri(String),
+    /// File format is unsupported.
+    #[error("unsupported file format: .{}", .file_ext)]
+    UnsupportedFileFormat {
+        /// Extension of file that is unsupported.
+        file_ext: String,
+    },
 
-    /// Workflow identifier was requested but was not found in workflow definition.
-    #[error("workflow identifier not specified")]
-    MissingIdentifier,
+    /// Conversion to/from JSON failed.
+    #[error("JSON conversion failed: {}", .0)]
+    JsonConversionFailed(#[from] serde_json::Error),
 
-    /// A definition object was found for a URI but is of the wrong type.
-    #[error("invalid downcast")]
-    InvalidDowncast {
+    /// Conversion to/from YAML failed.
+    ///
+    /// ### Note
+    ///
+    /// This variant can only occur if the `yaml` feature is enabled.
+    #[error("YAML conversion failed: {}", .0)]
+    YamlConversionFailed(
+        #[cfg(feature = "yaml")]
+        #[from]
+        serde_yaml::Error,
+        #[cfg(not(feature = "yaml"))] crate::impossible::Impossible,
+    ),
+
+    /// A file I/O error occurred.
+    #[error("file I/O error: {}", .0)]
+    FileIo(#[from] io::Error),
+
+    // --- Errors related to caching of workflow definition objects ---
+    /// A definition object was found in cache for a URI but is of the wrong type.
+    #[error("error: cached object was expected to be of type '{}', actual type is '{}'", .expected_type, .actual_type)]
+    InvalidCachedObjectType {
         /// The type of definition object that was expected (e.g. asked for by the caller).
         expected_type: &'static str,
 
         /// The type of the actual definition object found.
         actual_type: &'static str,
+    },
+
+    // --- Utility errors ---
+    /// Operation is unsupported because a feature is disabled.
+    #[error("unsupported operation, requires feature '{}'", .required_feature)]
+    FeatureDisabled {
+        /// Feature required for the operation to be supported.
+        required_feature: &'static str,
     },
 }
 

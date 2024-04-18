@@ -53,8 +53,8 @@ where
     ///   validated. If `validate` was called and succeeded, then conversion is always possible.
     pub fn value(&self) -> crate::Result<T> {
         match self {
-            NonNegativeNumber::Number(n) => Ok(*n),
-            NonNegativeNumber::String(s) => s.parse::<T>().map_err(|e| e.into()),
+            Self::Number(n) => Ok(*n),
+            Self::String(s) => s.parse::<T>().map_err(|e| e.into()),
         }
     }
 }
@@ -65,8 +65,8 @@ where
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            NonNegativeNumber::Number(n) => n.fmt(f),
-            NonNegativeNumber::String(s) => <String as Display>::fmt(s, f),
+            Self::Number(n) => n.fmt(f),
+            Self::String(s) => <String as Display>::fmt(s, f),
         }
     }
 }

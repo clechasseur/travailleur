@@ -1,9 +1,4 @@
 use std::path::PathBuf;
-use std::rc::Rc;
-
-use paste::paste;
-use travailleur::cache::DefCache;
-use travailleur::workflow::definition::WorkflowDefinition;
 
 fn examples_path() -> PathBuf {
     [env!("CARGO_MANIFEST_DIR"), "tests", "resources", "definitions", "examples"]
@@ -13,11 +8,11 @@ fn examples_path() -> PathBuf {
 
 macro_rules! test_files {
     ( $id:ident[$format:ident] ) => {
-        paste! {
+        paste::paste! {
             #[test]
             fn [<test_ $id:lower _ $format>]() {
-                let mut cache = DefCache::new();
-                let definition: Rc<WorkflowDefinition> = cache.get_or_insert(
+                let mut cache = ::travailleur::cache::DefinitionCache::new();
+                let definition: ::std::rc::Rc<::travailleur::workflow::definition::WorkflowDefinition> = cache.get_or_insert(
                     format!("file://{}", examples_path().join(&format!("{}.{}", stringify!($id), stringify!($format))).to_string_lossy()).as_str()
                 )
                 .expect(&format!(

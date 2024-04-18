@@ -1,9 +1,15 @@
-//! Types and traits pertaining to validation.
+//! Types and traits pertaining to workflow definition validation.
 
 use crate::detail::GardeValidate;
 
 /// Trait used for workflow definition validation.
-pub trait ValidateDef: GardeValidate {
+///
+/// This trait is implemented for all workflow definition types, regardless of
+/// whether the `validate` feature is enabled or not. If the `validate` feature
+/// is disabled, trying to performm validation will result in an [`Error::FeatureDisabled`].
+///
+/// [`Error::FeatureDisabled`]: crate::Error::FeatureDisabled
+pub trait ValidateDefinition: GardeValidate {
     #[cfg_attr(
         feature = "validate",
         doc = r"
@@ -13,7 +19,7 @@ pub trait ValidateDef: GardeValidate {
 
             # Errors
 
-            * [`Validation`](crate::Error::Validation): There were validation errors.
+            * [`ValidationFailed`](crate::Error::ValidationFailed): There were validation errors.
         "
     )]
     #[cfg_attr(
@@ -21,12 +27,12 @@ pub trait ValidateDef: GardeValidate {
         doc = r"
             Validates this definition object.
 
-            Always returns [`UnsupportedOperation`] because the `validate` feature is disabled.
+            Always returns [`FeatureDisabled`] because the `validate` feature is disabled.
 
-            [`UnsupportedOperation`]: crate::Error::UnsupportedOperation
+            [`FeatureDisabled`]: crate::Error::FeatureDisabled
         "
     )]
-    fn validate_def(&self) -> crate::Result<()> {
+    fn validate_definition(&self) -> crate::Result<()> {
         #[cfg(feature = "validate")]
         {
             self.validate(&()).map_err(|err| err.into())
@@ -34,9 +40,9 @@ pub trait ValidateDef: GardeValidate {
 
         #[cfg(not(feature = "validate"))]
         {
-            Err(crate::Error::UnsupportedOperation { required_feature: "validate" })
+            Err(crate::Error::FeatureDisabled { required_feature: "validate" })
         }
     }
 }
 
-impl<T> ValidateDef for T where T: GardeValidate {}
+impl<T> ValidateDefinition for T where T: GardeValidate {}

@@ -19,7 +19,9 @@ use serde_json::Value;
 use url::Url;
 
 #[cfg(feature = "validate")]
-use crate::detail::garde::{must_be, one_must_be_set, one_of_three_must_be_set, unique_values};
+use crate::detail::garde::{
+    must_be, one_of_three_must_be_set, one_of_two_must_be_set, unique_values,
+};
 use crate::detail::{all_of, false_value, jq, parallel, sequential, sync, terminate, true_value};
 use crate::workflow::definition::auth::Auth;
 use crate::workflow::definition::common::{
@@ -145,11 +147,22 @@ pub struct WorkflowDefinition {
 impl WorkflowDefinition {
     /// Returns the name of the starting workflow [`State`].
     ///
-    /// If `None` is returned, the workflow has no state and thus would complete as
-    /// soon as it is started[^1].
+    /// This is either the state pointed to by the [`start`] property or, if the property is
+    /// not specified, the first state in the [`states`] array.
+    ///
+    /// # Return value
+    ///
+    /// | Value of [`start`] | Value of [`states`]           | Return value                |
+    /// |--------------------|-------------------------------|-----------------------------|
+    /// | `Some(state_name)` | `_`                           | `Some(state_name)`          |
+    /// | `None`             | Non-empty array of [`State`]s | `Some(states.first().name)` |
+    /// | `None`             | Empty array of [`State`]s     | `None`[^1]                  |
     ///
     /// [^1]: this is impossible if the workflow has been validated, because the workflow
     ///       would then be guaranteed to have at least one [`State`].
+    ///
+    /// [`start`]: Self::start
+    /// [`states`]: Self::states
     pub fn start_state_name(&self) -> Option<&str> {
         self.start
             .as_ref()
@@ -164,7 +177,7 @@ impl WorkflowDefinition {
 pub struct Identifier {
     /// Workflow unique identifier
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "validate", garde(length(min = 1), custom(one_must_be_set("id", "key", self.key.as_ref()))))]
+    #[cfg_attr(feature = "validate", garde(length(min = 1), custom(one_of_two_must_be_set("id", "key", self.key.as_ref()))))]
     pub id: Option<String>,
 
     /// Domain-specific workflow identifier
@@ -240,7 +253,7 @@ pub enum Constants {
 pub struct Sleep {
     /// Amount of time (ISO 8601 duration format) to sleep before function/subflow invocation. Does not apply if 'eventRef' is defined.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "validate", garde(custom(one_must_be_set("before", "after", self.after.as_ref()))))]
+    #[cfg_attr(feature = "validate", garde(custom(one_of_two_must_be_set("before", "after", self.after.as_ref()))))]
     before: Option<String>,
 
     /// Amount of time (ISO 8601 duration format) to sleep after function/subflow invocation. Does not apply if 'eventRef' is defined.
@@ -356,7 +369,7 @@ pub enum Transition {
 pub struct Error {
     /// Reference to a unique workflow error definition. Used of errorRefs is not used
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "validate", garde(custom(one_must_be_set("error_ref", "error_refs", self.error_refs.as_ref()))))]
+    #[cfg_attr(feature = "validate", garde(custom(one_of_two_must_be_set("error_ref", "error_refs", self.error_refs.as_ref()))))]
     pub error_ref: Option<String>,
 
     /// References one or more workflow error definitions. Used if errorRef is not used
@@ -366,7 +379,7 @@ pub struct Error {
 
     /// Transition to next state to handle the error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "validate", garde(dive, custom(one_must_be_set("transition", "end", self.end.as_ref()))))]
+    #[cfg_attr(feature = "validate", garde(dive, custom(one_of_two_must_be_set("transition", "end", self.end.as_ref()))))]
     pub transition: Option<Transition>,
 
     /// End workflow execution in case of this error.
@@ -817,7 +830,7 @@ pub struct EventState {
 
     /// Next transition of the workflow after all the actions have been performed
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "validate", garde(dive, custom(one_must_be_set("transition", "end", self.end.as_ref()))))]
+    #[cfg_attr(feature = "validate", garde(dive, custom(one_of_two_must_be_set("transition", "end", self.end.as_ref()))))]
     pub transition: Option<Transition>,
 
     /// State end definition
@@ -1203,7 +1216,7 @@ pub struct DataBasedSwitchStateTimeouts {
 pub struct DefaultConditionDef {
     /// Transition definition
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "validate", garde(dive, custom(one_must_be_set("transition", "end", self.end.as_ref()))))]
+    #[cfg_attr(feature = "validate", garde(dive, custom(one_of_two_must_be_set("transition", "end", self.end.as_ref()))))]
     pub transition: Option<Transition>,
 
     /// End definition
@@ -1684,7 +1697,7 @@ pub enum Schedule {
 
         /// Cron definition
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "validate", garde(dive, custom(one_must_be_set("cron", "interval", self.interval()))))]
+        #[cfg_attr(feature = "validate", garde(dive, custom(one_of_two_must_be_set("cron", "interval", self.interval()))))]
         cron: Option<CronDef>,
 
         /// Timezone name used to evaluate the interval & cron-expression. (default: UTC)

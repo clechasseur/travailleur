@@ -15,6 +15,7 @@
 pub mod cache;
 pub(crate) mod detail;
 pub mod error;
+pub mod impossible;
 pub mod loader;
 pub mod validation;
 pub mod workflow;

@@ -33,7 +33,7 @@ impl WorkflowInstance {
     /// Generates a new workflow instance from a [`WorkflowDefinition`].
     ///
     /// The instance will have a new, randomly-generated [`id`], will start at the workflow's
-    /// [start state] with the provided workflow input (or an empty JSON object if no initial
+    /// [start state] with the provided workflow `input` (or an empty JSON object if no initial
     /// input is provided).
     ///
     /// [`id`]: Self::id

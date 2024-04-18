@@ -69,6 +69,9 @@ pub fn rest() -> FunctionType {
     FunctionType::Rest
 }
 
+// A trait that is essentially a stub for `garde::Validate` (with `Context = ()`).
+// If the `validate` feature is disabled, it's an empty trait.
+// It's implemented for all types (that also implement `garde::Validate`, if needed).
 #[cfg(feature = "validate")]
 pub trait GardeValidate: ::garde::Validate<Context = ()> {}
 
