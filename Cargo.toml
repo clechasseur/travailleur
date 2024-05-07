@@ -39,7 +39,7 @@ url = { version = "2.5.0", features = ["serde"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 
 [dev-dependencies]
-paste = "1.0.14"
+paste = "1.0.15"
 
 [build-dependencies]
 rustc_version = "0.4.0"
